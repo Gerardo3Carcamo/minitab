@@ -1,24 +1,47 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 
+type ApiErrorDetailItem = {
+  msg?: string;
+  loc?: Array<string | number>;
+  reason?: string;
+  [key: string]: unknown;
+};
+
 interface ApiErrorPayload {
   message?: string;
-  detail?: string | { reason?: string; [key: string]: unknown } | Array<{ msg?: string }>;
+  detail?: string | ApiErrorDetailItem | Array<ApiErrorDetailItem>;
+  error?: {
+    message?: string;
+    details?: string | ApiErrorDetailItem | Array<ApiErrorDetailItem>;
+  };
 }
 
 export const httpErrorInterceptor: HttpInterceptorFn = (req, next) =>
   next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       const payload = error.error as ApiErrorPayload | null;
-      const detailFromArray = Array.isArray(payload?.detail)
-        ? payload?.detail.map((item) => item.msg).filter(Boolean).join(', ')
+      const messageFromBackend = payload?.error?.message ?? payload?.message;
+      const detail = payload?.error?.details ?? payload?.detail;
+      const detailFromArray = Array.isArray(detail)
+        ? detail
+            .map((item) => {
+              const loc = Array.isArray(item.loc) ? item.loc.join('.') : null;
+              const msg = item.msg ?? null;
+              if (loc && msg) {
+                return `${loc}: ${msg}`;
+              }
+              return msg;
+            })
+            .filter(Boolean)
+            .join(', ')
         : null;
-      const detailFromObject = typeof payload?.detail === 'object' && payload?.detail !== null && !Array.isArray(payload.detail)
-        ? String(payload.detail['reason'] ?? JSON.stringify(payload.detail))
+      const detailFromObject = typeof detail === 'object' && detail !== null && !Array.isArray(detail)
+        ? String(detail['reason'] ?? detail['msg'] ?? JSON.stringify(detail))
         : null;
-      const detailFromString = typeof payload?.detail === 'string' ? payload.detail : null;
+      const detailFromString = typeof detail === 'string' ? detail : null;
       const message =
-        payload?.message ??
+        messageFromBackend ??
         detailFromString ??
         detailFromArray ??
         detailFromObject ??
