@@ -66,6 +66,10 @@ export const routes: Routes = [
       {
         path: 'reports',
         loadChildren: () => import('./features/reports/reports.routes').then((m) => m.REPORTS_ROUTES)
+      },
+      {
+        path: 'manual',
+        loadChildren: () => import('./features/manual/manual.routes').then((m) => m.MANUAL_ROUTES)
       }
     ]
   },

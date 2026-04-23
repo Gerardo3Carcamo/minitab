@@ -30,6 +30,7 @@ export class MainLayoutComponent {
     { path: '/time-series', label: 'Series de Tiempo' },
     { path: '/multivariate', label: 'Multivariada' },
     { path: '/automation', label: 'Automatización' },
-    { path: '/reports', label: 'Reportes' }
+    { path: '/reports', label: 'Reportes' },
+    { path: '/manual', label: 'Manual de Usuario' }
   ];
 }
