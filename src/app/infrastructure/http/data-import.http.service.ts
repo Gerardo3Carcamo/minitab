@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  BackendDatasetListResponse,
   BackendDatasetPreviewResponse,
   BackendDatasetResponse,
   BackendFileListResponse,
@@ -52,6 +53,10 @@ export class DataImportHttpService {
 
   getDataset(datasetId: string): Observable<BackendDatasetResponse> {
     return this.http.get<BackendDatasetResponse>(`/datasets/${datasetId}`);
+  }
+
+  getDatasets(): Observable<BackendDatasetListResponse> {
+    return this.http.get<BackendDatasetListResponse>('/datasets');
   }
 
   getDatasetPreview(datasetId: string, rows: number): Observable<BackendDatasetPreviewResponse> {

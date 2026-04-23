@@ -123,6 +123,22 @@ export class DataImportApiService {
       map(({ meta, preview }) => mapBackendDataset(meta, preview))
     );
   }
+
+  getLatestDatasetFromWorkspace(): Observable<Dataset | null> {
+    if (this.settings.useMockApi) {
+      return of(null);
+    }
+
+    return this.http.getDatasets().pipe(
+      map((response) => {
+        const sorted = [...response.datasets].sort(
+          (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+        );
+        return sorted[0]?.dataset_id ?? null;
+      }),
+      switchMap((datasetId) => datasetId ? this.getDatasetById(datasetId) : of(null))
+    );
+  }
 }
 
 function parsePreviewRows(range: string | undefined): number {

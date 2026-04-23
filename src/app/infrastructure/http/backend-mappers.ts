@@ -27,6 +27,10 @@ export interface BackendDatasetResponse {
   updated_at: string;
 }
 
+export interface BackendDatasetListResponse {
+  datasets: BackendDatasetResponse[];
+}
+
 export interface BackendDatasetPreviewResponse {
   columns: string[];
   rows: Array<Record<string, string | number | boolean | null>>;

@@ -116,6 +116,31 @@ function resolveEndpoint(module: AnalysisModule, analysisType: string): Endpoint
   if (directMatch) {
     return directMatch;
   }
-  const fallback = Object.values(moduleEndpoints)[0];
-  return fallback;
+
+  const normalizedRequested = normalizeLabel(analysisType);
+  const normalizedMatches = Object.entries(moduleEndpoints).find(
+    ([label]) => normalizeLabel(label) === normalizedRequested
+  );
+  if (normalizedMatches) {
+    return normalizedMatches[1];
+  }
+
+  const fuzzyMatch = Object.entries(moduleEndpoints).find(([label]) => {
+    const normalizedLabel = normalizeLabel(label);
+    return normalizedLabel.includes(normalizedRequested) || normalizedRequested.includes(normalizedLabel);
+  });
+  if (fuzzyMatch) {
+    return fuzzyMatch[1];
+  }
+
+  throw new Error(`Tipo de analisis no reconocido para ${module}: "${analysisType}".`);
+}
+
+function normalizeLabel(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
