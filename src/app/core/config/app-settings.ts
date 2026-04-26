@@ -8,6 +8,6 @@ export interface AppSettings {
 export const APP_SETTINGS = new InjectionToken<AppSettings>('APP_SETTINGS');
 
 export const APP_SETTINGS_VALUE: AppSettings = {
-  apiBaseUrl: 'http://localhost:8000/api/v1',
+  apiBaseUrl: 'https://minitabbackend.arechsolutions.com/api/v1',
   useMockApi: false
 };

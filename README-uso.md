@@ -9,7 +9,7 @@ Objetivo: que sepas **que hacer, como hacerlo y que funciones puedes usar** dent
 
 La app funciona con:
 - Frontend: `http://localhost:4200`
-- Backend API: `http://localhost:8000/api/v1`
+- Backend API: `https://minitabbackend.arechsolutions.com/api/v1`
 
 Si la pantalla no carga datos o marca error de conexion, pide soporte tecnico para validar que backend y frontend esten activos.
 
