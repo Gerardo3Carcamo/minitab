@@ -1,1 +1,17 @@
-<router-outlet />
+<div class="app-shell">
+  <header class="topbar">
+    <div class="brand">
+      <p class="kicker">Minitab App</p>
+      <strong>Analytics Workspace</strong>
+    </div>
+    <nav class="topnav">
+      <a routerLink="/histograma" routerLinkActive="active">Histograma Studio</a>
+      <a routerLink="/funciones-probabilidad" routerLinkActive="active">Funciones de probabilidad</a>
+      <a routerLink="/distribucion-normal" routerLinkActive="active">Distribución normal</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
