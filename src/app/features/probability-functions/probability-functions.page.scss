@@ -19,7 +19,6 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  align-items: flex-start;
 }
 
 .eyebrow {
@@ -126,10 +125,6 @@ small {
   margin: 0;
   width: 16px;
   height: 16px;
-}
-
-.toggles {
-  margin-top: -3px;
 }
 
 .actions {
@@ -304,11 +299,6 @@ small {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-}
-
-.std-actions {
-  display: flex;
-  justify-content: flex-start;
 }
 
 .std-results {
