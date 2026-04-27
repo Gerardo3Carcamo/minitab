@@ -1,0 +1,251 @@
+<section class="prob-shell">
+  <header class="hero" data-tour="pf-hero">
+    <div>
+      <p class="eyebrow">Modulo completo</p>
+      <h1>Funciones de probabilidad y estandarizacion</h1>
+      <p class="subtitle">
+        Incluye PMF/PDF, CDF, colas, intervalos y complemento para Normal, Binomial, Poisson, Exponencial,
+        Uniforme, t de Student, Chi-cuadrada y F.
+      </p>
+    </div>
+    <div class="hero-tools">
+      <button class="btn ghost" type="button" (click)="startTutorial()" data-tour="pf-tutorial-btn">Tutorial</button>
+      <div class="badge">8 distribuciones | X ↔ Z</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <article class="panel" data-tour="pf-config-panel">
+      <h2>Configuracion</h2>
+      <form class="form" [formGroup]="form" (ngSubmit)="runCalculation()">
+        <label data-tour="pf-distribution">
+          <span>Distribucion</span>
+          <select [formControl]="form.controls.distribution">
+            <option *ngFor="let dist of distributions" [value]="dist.key">{{ dist.label }}</option>
+          </select>
+          <small>{{ distributionDescription() }}</small>
+        </label>
+
+        <div class="pair" *ngIf="form.controls.distribution.value === 'normal'">
+          <label>
+            <span>Media (mu)</span>
+            <input type="number" [formControl]="form.controls.mean">
+          </label>
+          <label>
+            <span>Desv. estandar (sigma)</span>
+            <input type="number" [formControl]="form.controls.stdDev">
+          </label>
+        </div>
+
+        <div class="pair" *ngIf="form.controls.distribution.value === 'binomial'">
+          <label>
+            <span>Ensayos (n)</span>
+            <input type="number" step="1" [formControl]="form.controls.trials">
+          </label>
+          <label>
+            <span>Prob. de exito (p)</span>
+            <input type="number" step="0.01" [formControl]="form.controls.successProb">
+          </label>
+        </div>
+
+        <label *ngIf="form.controls.distribution.value === 'poisson'">
+          <span>Lambda</span>
+          <input type="number" step="0.01" [formControl]="form.controls.lambda">
+        </label>
+
+        <label *ngIf="form.controls.distribution.value === 'exponential'">
+          <span>Tasa (lambda)</span>
+          <input type="number" step="0.01" [formControl]="form.controls.rate">
+        </label>
+
+        <div class="pair" *ngIf="form.controls.distribution.value === 'uniform'">
+          <label>
+            <span>Min (a)</span>
+            <input type="number" [formControl]="form.controls.min">
+          </label>
+          <label>
+            <span>Max (b)</span>
+            <input type="number" [formControl]="form.controls.max">
+          </label>
+        </div>
+
+        <label *ngIf="form.controls.distribution.value === 'student-t' || form.controls.distribution.value === 'chi-square'">
+          <span>Grados de libertad (df)</span>
+          <input type="number" step="1" [formControl]="form.controls.degreesFreedom">
+        </label>
+
+        <div class="pair" *ngIf="form.controls.distribution.value === 'f'">
+          <label>
+            <span>df1</span>
+            <input type="number" step="1" [formControl]="form.controls.df1">
+          </label>
+          <label>
+            <span>df2</span>
+            <input type="number" step="1" [formControl]="form.controls.df2">
+          </label>
+        </div>
+
+        <label data-tour="pf-event-mode">
+          <span>Modo de evento</span>
+          <select [formControl]="form.controls.mode">
+            <option value="left">Cola izquierda</option>
+            <option value="right">Cola derecha</option>
+            <option value="interval">Intervalo</option>
+            <option value="point">Probabilidad puntual</option>
+          </select>
+        </label>
+
+        <div class="pair" *ngIf="isTailMode()">
+          <label>
+            <span>x</span>
+            <input type="number" [formControl]="form.controls.x">
+          </label>
+          <label class="switch">
+            <input type="checkbox" [formControl]="form.controls.includeBoundary">
+            <span>Incluir frontera (<= o >=)</span>
+          </label>
+        </div>
+
+        <label *ngIf="form.controls.mode.value === 'point'">
+          <span>x</span>
+          <input type="number" [formControl]="form.controls.x">
+        </label>
+
+        <div class="pair" *ngIf="form.controls.mode.value === 'interval'">
+          <label>
+            <span>Lower</span>
+            <input type="number" [formControl]="form.controls.lower">
+          </label>
+          <label>
+            <span>Upper</span>
+            <input type="number" [formControl]="form.controls.upper">
+          </label>
+        </div>
+
+        <div class="pair toggles" *ngIf="form.controls.mode.value === 'interval'">
+          <label class="switch">
+            <input type="checkbox" [formControl]="form.controls.includeLower">
+            <span>Cerrado en lower [</span>
+          </label>
+          <label class="switch">
+            <input type="checkbox" [formControl]="form.controls.includeUpper">
+            <span>Cerrado en upper ]</span>
+          </label>
+        </div>
+
+        <div class="actions" data-tour="pf-calculate-actions">
+          <button class="btn primary" type="submit">Calcular</button>
+          <button class="btn ghost" type="button" (click)="resetDefaults()">Reset</button>
+        </div>
+      </form>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </article>
+
+    <article class="panel results" data-tour="pf-results">
+      <h2>Resultados</h2>
+      <ng-container *ngIf="result as current; else emptyResult">
+        <div class="metric-top">
+          <div>
+            <p class="metric-label">Evento</p>
+            <h3>{{ current.eventLabel }}</h3>
+          </div>
+          <div class="value-chip">
+            <p>{{ formatPercentValue(current.probability) }}</p>
+            <small>{{ formatNumberValue(current.probability) }}</small>
+          </div>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <p>Complemento</p>
+            <strong>{{ formatPercentValue(current.complement) }}</strong>
+          </div>
+          <div class="metric-card">
+            <p>{{ current.pointValueLabel }}</p>
+            <strong>{{ formatNumberValue(current.pointValue) }}</strong>
+            <small>x = {{ formatNumberValue(current.pointAt) }}</small>
+          </div>
+          <div class="metric-card">
+            <p>CDF en x</p>
+            <strong>{{ formatPercentValue(current.cdfAtX) }}</strong>
+            <small>F(x)</small>
+          </div>
+          <div class="metric-card">
+            <p>Cola izquierda</p>
+            <strong>{{ formatPercentValue(current.leftTail) }}</strong>
+            <small>P(X ≤ x)</small>
+          </div>
+          <div class="metric-card">
+            <p>Cola derecha</p>
+            <strong>{{ formatPercentValue(current.rightTail) }}</strong>
+            <small>P(X ≥ x)</small>
+          </div>
+          <div class="metric-card">
+            <p>Familia</p>
+            <strong>{{ current.stats.family }}</strong>
+            <small>{{ current.stats.support }}</small>
+          </div>
+        </div>
+
+        <h3 class="block-title">Datos estadisticos</h3>
+        <div class="stats-grid">
+          <div class="stat-item"><span>Media</span><strong>{{ formatNumberValue(current.stats.mean) }}</strong></div>
+          <div class="stat-item"><span>Varianza</span><strong>{{ formatNumberValue(current.stats.variance) }}</strong></div>
+          <div class="stat-item"><span>Desv. estandar</span><strong>{{ formatNumberValue(current.stats.stdDev) }}</strong></div>
+          <div class="stat-item"><span>Mediana</span><strong>{{ formatAny(current.stats.median) }}</strong></div>
+          <div class="stat-item"><span>Moda</span><strong>{{ formatAny(current.stats.mode) }}</strong></div>
+        </div>
+
+        <div class="notes" *ngIf="current.notes.length > 0">
+          <h3 class="block-title">Notas</h3>
+          <ul>
+            <li *ngFor="let note of current.notes">{{ note }}</li>
+          </ul>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyResult>
+        <div class="empty">
+          Configura la distribucion y presiona <strong>Calcular</strong> para obtener probabilidades.
+        </div>
+      </ng-template>
+    </article>
+  </div>
+
+  <article class="panel standardization" data-tour="pf-standardization">
+    <h2>Estandarizacion (X ↔ Z)</h2>
+    <p class="std-intro">Puntaje z y transformacion inversa con la misma media y desviacion estandar.</p>
+    <div class="std-grid">
+      <label>
+        <span>Media (mu)</span>
+        <input type="number" [(ngModel)]="zMean">
+      </label>
+      <label>
+        <span>Desv. estandar (sigma)</span>
+        <input type="number" [(ngModel)]="zStd">
+      </label>
+      <label>
+        <span>X para convertir a Z</span>
+        <input type="number" [(ngModel)]="xInput">
+      </label>
+      <label>
+        <span>Z para convertir a X</span>
+        <input type="number" [(ngModel)]="zInput">
+      </label>
+    </div>
+    <div class="std-actions">
+      <button class="btn primary" type="button" (click)="calculateStandardization()">Calcular estandarizacion</button>
+    </div>
+    <p class="error" *ngIf="standardizationError">{{ standardizationError }}</p>
+    <div class="std-results" *ngIf="!standardizationError">
+      <div>
+        <p class="formula">z = (x - mu) / sigma</p>
+        <strong>{{ formatNumberValue(zResult) }}</strong>
+      </div>
+      <div>
+        <p class="formula">x = mu + z * sigma</p>
+        <strong>{{ formatNumberValue(xResult) }}</strong>
+      </div>
+    </div>
+  </article>
+</section>

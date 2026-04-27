@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import 'driver.js/dist/driver.css';
 
 :root {
   --app-bg: #eaf1f4;
@@ -30,7 +31,11 @@ body {
   background: var(--app-bg);
 }
 
-h1, h2, h3, h4, p {
+h1,
+h2,
+h3,
+h4,
+p {
   margin-top: 0;
 }
 
@@ -59,12 +64,29 @@ h1, h2, h3, h4, p {
   padding: 14px;
 }
 
-.span-4 { grid-column: span 4; }
-.span-5 { grid-column: span 5; }
-.span-6 { grid-column: span 6; }
-.span-7 { grid-column: span 7; }
-.span-8 { grid-column: span 8; }
-.span-12 { grid-column: span 12; }
+.span-4 {
+  grid-column: span 4;
+}
+
+.span-5 {
+  grid-column: span 5;
+}
+
+.span-6 {
+  grid-column: span 6;
+}
+
+.span-7 {
+  grid-column: span 7;
+}
+
+.span-8 {
+  grid-column: span 8;
+}
+
+.span-12 {
+  grid-column: span 12;
+}
 
 .form-grid {
   display: grid;
@@ -138,6 +160,7 @@ button.secondary {
   .span-8 {
     grid-column: span 12;
   }
+
   .form-grid.cols-2 {
     grid-template-columns: 1fr;
   }

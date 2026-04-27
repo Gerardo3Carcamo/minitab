@@ -1,0 +1,252 @@
+<section class="studio-shell">
+  <header class="header-bar" data-tour="studio-header">
+    <div class="title-wrap">
+      <p class="eyebrow">Minitab Studio</p>
+      <h1>MaxiTab Histograma Pro</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn secondary" type="button" (click)="toggleSidebar()" data-tour="studio-toggle-sidebar">
+        {{ sidebarExpanded ? 'Ocultar panel' : 'Mostrar panel' }}
+      </button>
+      <button class="btn primary" type="button" (click)="generateHistogram()" data-tour="studio-generate-header">Generar</button>
+      <button class="btn secondary" type="button" (click)="switchTab('data')">Ir a Datos</button>
+      <button class="btn secondary" type="button" (click)="exportHistogram()">Exportar</button>
+      <button class="btn secondary" type="button" (click)="startTutorial()" data-tour="studio-tutorial-btn">Tutorial</button>
+    </div>
+  </header>
+
+  <div class="workspace" [class.collapsed]="!sidebarExpanded">
+    <aside class="sidebar" *ngIf="sidebarExpanded">
+      <section class="card quick-nav" data-tour="studio-quick-nav">
+        <h2>Navegacion</h2>
+        <button class="btn secondary" type="button" (click)="switchTab('hist')">Histograma</button>
+        <button class="btn secondary" type="button" (click)="switchTab('data')">Datos</button>
+        <button class="btn secondary" type="button" (click)="switchTab('preview')">Vista previa</button>
+        <button class="btn secondary" type="button" (click)="switchTab('summary')">Resumen</button>
+        <button class="btn secondary" type="button" (click)="switchTab('output')">Salida</button>
+      </section>
+
+      <section class="card config-card" data-tour="studio-config-panel">
+        <h2>Configuracion</h2>
+
+        <div class="group" data-tour="studio-data-selection">
+          <h3>Seleccion de datos</h3>
+          <label>
+            <span>Variable</span>
+            <select [(ngModel)]="varName">
+              <option *ngFor="let col of columnNames" [value]="col">{{ col }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Agrupar por</span>
+            <select [(ngModel)]="groupBy">
+              <option value="(Ninguno)">(Ninguno)</option>
+              <option *ngFor="let col of columnNames" [value]="col">{{ col }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Modo grupos</span>
+            <select [(ngModel)]="groupMode">
+              <option value="Ninguno">Ninguno</option>
+              <option value="Superpuesto">Superpuesto</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="group" data-tour="studio-spec-limits">
+          <h3>Especificaciones</h3>
+          <label>
+            <span>LSL</span>
+            <input [(ngModel)]="lslText" type="text" placeholder="Opcional">
+          </label>
+          <label>
+            <span>USL</span>
+            <input [(ngModel)]="uslText" type="text" placeholder="Opcional">
+          </label>
+          <label>
+            <span>Target</span>
+            <input [(ngModel)]="targetText" type="text" placeholder="Opcional">
+          </label>
+        </div>
+
+        <div class="group" data-tour="studio-hist-settings">
+          <h3>Configuracion de histograma</h3>
+          <div class="inline-grid">
+            <label>
+              <span>Bins</span>
+              <select [(ngModel)]="binsMode">
+                <option value="auto">auto</option>
+                <option value="manual">manual</option>
+              </select>
+            </label>
+            <label>
+              <span>Valor</span>
+              <input [(ngModel)]="binsManualText" type="text" [disabled]="binsMode !== 'manual'">
+            </label>
+          </div>
+
+          <div class="radio-list">
+            <label class="switch">
+              <input [(ngModel)]="scale" type="radio" name="scale" value="Densidad">
+              <span>Densidad</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="scale" type="radio" name="scale" value="Porcentaje">
+              <span>Porcentaje</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="scale" type="radio" name="scale" value="Probabilidad">
+              <span>Probabilidad (0-1)</span>
+            </label>
+          </div>
+
+          <div class="check-list">
+            <label class="switch">
+              <input [(ngModel)]="showStats" type="checkbox">
+              <span>Cuadro de estadisticos</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="showFit" type="checkbox">
+              <span>Ajuste normal</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="showKde" type="checkbox">
+              <span>KDE</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="discrete" type="checkbox">
+              <span>Variable discreta (bins enteros)</span>
+            </label>
+            <label class="switch">
+              <input [(ngModel)]="showLimits" type="checkbox">
+              <span>Mostrar LSL / USL / Target</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="group" data-tour="studio-analysis-actions">
+          <h3>Analisis</h3>
+          <button class="btn primary full" type="button" (click)="generateHistogram()">Generar histograma</button>
+          <button class="btn secondary full" type="button" (click)="exportHistogram()">Exportar histograma</button>
+          <button class="btn secondary full" type="button" (click)="onRunDescriptive()">Descriptivos</button>
+          <button class="btn secondary full" type="button" (click)="onRunNormality()">Normalidad</button>
+          <button class="btn secondary full" type="button" (click)="onRunCapability()">Capacidad Cp/Cpk</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="content">
+      <nav class="tab-nav" data-tour="studio-tabs">
+        <button
+          *ngFor="let tab of allTabs"
+          class="tab-btn"
+          [class.active]="activeTab === tab.key"
+          type="button"
+          (click)="switchTab(tab.key)"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
+      <section class="card tab-card" [hidden]="activeTab !== 'hist'" data-tour="studio-chart-tab">
+        <canvas #histCanvas class="hist-canvas"></canvas>
+      </section>
+
+      <section class="card tab-card" [hidden]="activeTab !== 'data'" data-tour="studio-data-grid">
+        <div class="toolbar">
+          <button class="btn secondary" type="button" (click)="addRow()">Agregar fila</button>
+          <button class="btn secondary" type="button" (click)="removeRow()">Quitar fila</button>
+          <button class="btn secondary" type="button" (click)="addColumn()">Agregar columna</button>
+          <button class="btn secondary" type="button" (click)="removeColumn()">Quitar columna</button>
+          <button class="btn secondary" type="button" (click)="clearValues()">Limpiar</button>
+          <button class="btn secondary" type="button" (click)="csvInput.click()">Cargar CSV</button>
+          <button class="btn secondary" type="button" (click)="saveCsv()">Guardar CSV</button>
+          <input #csvInput type="file" accept=".csv,text/csv" hidden (change)="onCsvSelected($event)">
+        </div>
+        <div class="table-wrap">
+          <table class="grid-table editable">
+            <thead>
+              <tr>
+                <th *ngFor="let col of columnNames; let c = index">
+                  <input [value]="col" (input)="updateColumnName(c, $any($event.target).value)">
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of rows; let r = index">
+                <td *ngFor="let col of columnNames; let c = index">
+                  <input [value]="cellValue(r, c)" (input)="onCellInput($event, r, c)">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card tab-card" [hidden]="activeTab !== 'preview'">
+        <div class="table-wrap">
+          <table class="grid-table">
+            <thead>
+              <tr>
+                <th *ngFor="let col of columnNames">{{ col }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of previewRows">
+                <td *ngFor="let col of columnNames; let c = index">{{ row[c] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card tab-card" [hidden]="activeTab !== 'summary'">
+        <div class="table-wrap">
+          <table class="grid-table">
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>N</th>
+                <th>Media</th>
+                <th>Varianza</th>
+                <th>Desv</th>
+                <th>Moda</th>
+                <th>Min</th>
+                <th>Q1</th>
+                <th>Mediana</th>
+                <th>Q3</th>
+                <th>IQR</th>
+                <th>Max</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of summaryRows">
+                <td>{{ row.variable }}</td>
+                <td>{{ row.n }}</td>
+                <td>{{ row.mean }}</td>
+                <td>{{ row.variance }}</td>
+                <td>{{ row.std }}</td>
+                <td>{{ row.mode }}</td>
+                <td>{{ row.min }}</td>
+                <td>{{ row.q1 }}</td>
+                <td>{{ row.median }}</td>
+                <td>{{ row.q3 }}</td>
+                <td>{{ row.iqr }}</td>
+                <td>{{ row.max }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card tab-card" [hidden]="activeTab !== 'output'">
+        <textarea class="output-box" [value]="outputText" readonly></textarea>
+      </section>
+    </main>
+  </div>
+
+  <footer class="status-bar" data-tour="studio-status-bar">
+    <span class="status">{{ statusMessage }}</span>
+    <span class="error" *ngIf="errorMessage">{{ errorMessage }}</span>
+  </footer>
+</section>

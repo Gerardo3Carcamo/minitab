@@ -28,6 +28,23 @@ export const routes: Routes = [
         loadChildren: () => import('./features/descriptive/descriptive.routes').then((m) => m.DESCRIPTIVE_ROUTES)
       },
       {
+        path: 'histograma',
+        loadComponent: () => import('./features/probability/probability.page').then((m) => m.ProbabilityPageComponent)
+      },
+      {
+        path: 'funciones-probabilidad',
+        loadComponent: () =>
+          import('./features/probability-functions/probability-functions.page').then(
+            (m) => m.ProbabilityFunctionsPageComponent
+          )
+      },
+      {
+        path: 'distribucion-normal',
+        loadComponent: () =>
+          import('./features/normal-assignment/normal-assignment.page').then((m) => m.NormalAssignmentPageComponent)
+      },
+      { path: 'probability', pathMatch: 'full', redirectTo: 'funciones-probabilidad' },
+      {
         path: 'visualization',
         loadChildren: () => import('./features/visualization/visualization.routes').then((m) => m.VISUALIZATION_ROUTES)
       },

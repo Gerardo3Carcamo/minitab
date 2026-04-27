@@ -1,0 +1,160 @@
+<section class="assignment-shell">
+  <header class="hero" data-tour="na-hero">
+    <div>
+      <p class="eyebrow">Probabilidad y Estadística</p>
+      <h1>Módulo de Distribución Normal</h1>
+      <p class="subtitle">
+        Captura tus propios valores y resuelve problemas de normal, normal estándar y media muestral con gráfica sombreada.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn secondary" type="button" (click)="startTutorial()" data-tour="na-tutorial-btn">Tutorial</button>
+      <button class="btn secondary" type="button" (click)="exportGraph()">Exportar gráfica</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <article class="panel controls" data-tour="na-controls">
+      <h2>Cálculo manual</h2>
+
+      <label data-tour="na-solver-type">
+        <span>Tipo de resolución</span>
+        <select [(ngModel)]="solverType" (change)="solve()">
+          <option value="normal">Normal (X)</option>
+          <option value="sampling">Media muestral (X̄)</option>
+          <option value="inverse">Cuantil / percentil</option>
+          <option value="solve-mu">Hallar μ con σ conocida</option>
+          <option value="solve-mu-sigma">Hallar μ y σ</option>
+        </select>
+      </label>
+
+      <section class="block" *ngIf="solverType === 'normal'">
+        <h3>Normal X ~ N(μ, σ)</h3>
+        <div class="pair">
+          <label><span>μ</span><input type="number" [(ngModel)]="mu"></label>
+          <label><span>σ</span><input type="number" [(ngModel)]="sigma"></label>
+        </div>
+        <label>
+          <span>Evento</span>
+          <select [(ngModel)]="eventMode">
+            <option value="left">P(X ≤ x)</option>
+            <option value="right">P(X ≥ x)</option>
+            <option value="interval">P(lower ≤ X ≤ upper)</option>
+            <option value="point">P(X = x)</option>
+          </select>
+        </label>
+        <label *ngIf="eventMode === 'left' || eventMode === 'right' || eventMode === 'point'">
+          <span>x</span>
+          <input type="number" [(ngModel)]="x">
+        </label>
+        <div class="pair" *ngIf="eventMode === 'interval'">
+          <label><span>lower</span><input type="number" [(ngModel)]="lower"></label>
+          <label><span>upper</span><input type="number" [(ngModel)]="upper"></label>
+        </div>
+      </section>
+
+      <section class="block" *ngIf="solverType === 'sampling'">
+        <h3>Media muestral X̄</h3>
+        <div class="pair">
+          <label><span>μ poblacional</span><input type="number" [(ngModel)]="sampleMu"></label>
+          <label><span>σ poblacional</span><input type="number" [(ngModel)]="sampleSigma"></label>
+        </div>
+        <label><span>n</span><input type="number" [(ngModel)]="sampleN"></label>
+        <label>
+          <span>Evento</span>
+          <select [(ngModel)]="sampleEventMode">
+            <option value="left">P(X̄ ≤ x)</option>
+            <option value="right">P(X̄ ≥ x)</option>
+            <option value="interval">P(lower ≤ X̄ ≤ upper)</option>
+            <option value="point">P(X̄ = x)</option>
+          </select>
+        </label>
+        <label *ngIf="sampleEventMode === 'left' || sampleEventMode === 'right' || sampleEventMode === 'point'">
+          <span>x̄</span>
+          <input type="number" [(ngModel)]="sampleX">
+        </label>
+        <div class="pair" *ngIf="sampleEventMode === 'interval'">
+          <label><span>lower</span><input type="number" [(ngModel)]="sampleLower"></label>
+          <label><span>upper</span><input type="number" [(ngModel)]="sampleUpper"></label>
+        </div>
+      </section>
+
+      <section class="block" *ngIf="solverType === 'inverse'">
+        <h3>Cuantil / percentil</h3>
+        <div class="pair">
+          <label><span>μ</span><input type="number" [(ngModel)]="inverseMu"></label>
+          <label><span>σ</span><input type="number" [(ngModel)]="inverseSigma"></label>
+        </div>
+        <div class="pair">
+          <label><span>Área</span><input type="number" step="0.0001" [(ngModel)]="inverseArea"></label>
+          <label>
+            <span>Lado</span>
+            <select [(ngModel)]="inverseSide">
+              <option value="left">Área izquierda</option>
+              <option value="right">Área derecha</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="block" *ngIf="solverType === 'solve-mu'">
+        <h3>Hallar μ con σ conocida</h3>
+        <div class="pair">
+          <label><span>x</span><input type="number" [(ngModel)]="solveMuX"></label>
+          <label><span>σ</span><input type="number" [(ngModel)]="solveMuSigma"></label>
+        </div>
+        <div class="pair">
+          <label><span>Probabilidad</span><input type="number" step="0.0001" [(ngModel)]="solveMuProb"></label>
+          <label>
+            <span>Lado</span>
+            <select [(ngModel)]="solveMuSide">
+              <option value="left">P(X ≤ x)</option>
+              <option value="right">P(X ≥ x)</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="block" *ngIf="solverType === 'solve-mu-sigma'">
+        <h3>Hallar μ y σ con 2 ecuaciones</h3>
+        <div class="triple">
+          <label><span>x1</span><input type="number" [(ngModel)]="x1"></label>
+          <label><span>p1</span><input type="number" step="0.0001" [(ngModel)]="p1"></label>
+          <label>
+            <span>Lado 1</span>
+            <select [(ngModel)]="side1">
+              <option value="left">P(X ≤ x1)</option>
+              <option value="right">P(X ≥ x1)</option>
+            </select>
+          </label>
+        </div>
+        <div class="triple">
+          <label><span>x2</span><input type="number" [(ngModel)]="x2"></label>
+          <label><span>p2</span><input type="number" step="0.0001" [(ngModel)]="p2"></label>
+          <label>
+            <span>Lado 2</span>
+            <select [(ngModel)]="side2">
+              <option value="left">P(X ≤ x2)</option>
+              <option value="right">P(X ≥ x2)</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <div class="actions" data-tour="na-solve-action">
+        <button class="btn primary" type="button" (click)="solve()">Resolver y graficar</button>
+      </div>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </article>
+
+    <article class="panel results" data-tour="na-results">
+      <h2>{{ resultTitle }}</h2>
+      <ul>
+        <li *ngFor="let line of resultLines">{{ line }}</li>
+      </ul>
+      <div #chartWrap class="chart-wrap" data-tour="na-chart">
+        <canvas #normalCanvas class="chart"></canvas>
+      </div>
+    </article>
+  </div>
+</section>
