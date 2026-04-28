@@ -1,0 +1,166 @@
+<section class="desc-shell">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">Estadistica Descriptiva > Mostrar estadisticos descriptivos</p>
+      <h1>Modulo de estadistica descriptiva</h1>
+      <p class="subtitle">
+        Calcula media, mediana, moda, varianza, desviacion estandar, minimo, maximo y n de la moda
+        desde una lista de datos en un solo paso.
+      </p>
+    </div>
+    <div class="badge">Minitab-style | Flujo rapido</div>
+  </header>
+
+  <div class="grid">
+    <article class="panel">
+      <h2>Datos de entrada</h2>
+      <label class="input-label">
+        <span>Ingresa valores numericos</span>
+        <textarea
+          [(ngModel)]="dataText"
+          rows="12"
+          placeholder="12.4 11.8 13.1 12.6 12.4 ..."
+        ></textarea>
+        <small>Separadores validos: salto de linea, espacios, comas y punto y coma.</small>
+      </label>
+
+      <div class="file-loader">
+        <label class="btn ghost file-btn">
+          <input
+            type="file"
+            accept=".csv,.txt,.xlsx,.xls"
+            (change)="onFileSelected($event)"
+          >
+          Cargar CSV / Excel
+        </label>
+        <small *ngIf="isLoadingFile">Leyendo archivo...</small>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="button" (click)="calculate()">Calcular</button>
+        <button class="btn ghost" type="button" (click)="loadExample()">Cargar ejemplo</button>
+        <button class="btn ghost" type="button" (click)="clearData()">Limpiar</button>
+      </div>
+
+      <section class="visual-options">
+        <div class="visual-header">
+          <h3>Que quieres visualizar</h3>
+          <div class="visual-actions">
+            <button class="btn ghost mini" type="button" (click)="setAllVisualizationOptions(true)">Todo</button>
+            <button class="btn ghost mini" type="button" (click)="setAllVisualizationOptions(false)">Nada</button>
+          </div>
+        </div>
+
+        <div class="option-grid">
+          <label><input type="checkbox" [(ngModel)]="viewOptions.n"> N</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.mean"> Media</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.median"> Mediana</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.mode"> Moda</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.modeCount"> N para la moda</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.variance"> Varianza</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.stdDev"> Desv. estandar</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.min"> Minimo</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.max"> Maximo</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.quartiles"> Cuartiles (Q1, Q2 y Q3)</label>
+        </div>
+      </section>
+
+      <p class="info" *ngIf="fileInfoMessage">{{ fileInfoMessage }}</p>
+      <p class="warning" *ngIf="warningMessage">{{ warningMessage }}</p>
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <div class="preview" *ngIf="parsedValues.length > 0">
+        <p>Datos detectados: <strong>{{ parsedValues.length }}</strong></p>
+        <code>{{ valuesPreview }}</code>
+      </div>
+    </article>
+
+    <article class="panel results">
+      <h2>Estadisticos descriptivos</h2>
+
+      <ng-container *ngIf="summary as stats; else emptyResult">
+        <div class="metric-grid" *ngIf="hasAnyMetricSelected; else emptySelection">
+          <div class="metric-card" *ngIf="viewOptions.n">
+            <p>N</p>
+            <strong>{{ stats.n }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.mean">
+            <p>Media</p>
+            <strong>{{ formatNumber(stats.mean) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.median">
+            <p>Mediana</p>
+            <strong>{{ formatNumber(stats.median) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.mode">
+            <p>Moda</p>
+            <strong>{{ modeDisplay }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.modeCount">
+            <p>N para la moda</p>
+            <strong>{{ modeCountDisplay }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.variance">
+            <p>Varianza (muestral)</p>
+            <strong>{{ formatNumber(stats.variance) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.stdDev">
+            <p>Desv. estandar (muestral)</p>
+            <strong>{{ formatNumber(stats.stdDev) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.min">
+            <p>Minimo</p>
+            <strong>{{ formatNumber(stats.min) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.max">
+            <p>Maximo</p>
+            <strong>{{ formatNumber(stats.max) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.quartiles">
+            <p>Q1 (primer cuartil)</p>
+            <strong>{{ formatNumber(stats.q1) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.quartiles">
+            <p>Q2 (mediana)</p>
+            <strong>{{ formatNumber(stats.q2) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.quartiles">
+            <p>Q3 (tercer cuartil)</p>
+            <strong>{{ formatNumber(stats.q3) }}</strong>
+          </div>
+        </div>
+
+        <div class="mode-table" *ngIf="viewOptions.mode && stats.modes.length > 0">
+          <h3>Detalle de moda</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Valor</th>
+                <th>Frecuencia (n)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let mode of stats.modes">
+                <td>{{ formatNumber(mode.value) }}</td>
+                <td>{{ mode.count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #emptySelection>
+          <div class="empty">
+            No hay estadisticos seleccionados. Activa al menos una opcion en
+            <strong>Que quieres visualizar</strong>.
+          </div>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #emptyResult>
+        <div class="empty">
+          Escribe tus datos y presiona <strong>Calcular</strong> para mostrar los estadisticos descriptivos.
+        </div>
+      </ng-template>
+    </article>
+  </div>
+</section>
