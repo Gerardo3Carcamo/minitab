@@ -18,7 +18,10 @@ interface VisualizationOptions {
   stdDev: boolean;
   min: boolean;
   max: boolean;
+  range: boolean;
   quartiles: boolean;
+  classCount: boolean;
+  amplitude: boolean;
 }
 
 @Component({
@@ -62,7 +65,10 @@ export class DescriptiveStatisticsPageComponent {
     stdDev: true,
     min: true,
     max: true,
-    quartiles: false
+    range: false,
+    quartiles: false,
+    classCount: false,
+    amplitude: false
   };
 
   constructor() {
@@ -145,6 +151,13 @@ export class DescriptiveStatisticsPageComponent {
     return formatStat(value);
   }
 
+  classCountMethodLabel(method: 'log' | 'sqrt'): string {
+    if (method === 'log') {
+      return 'n > 200: k = 1 + 3.222 * log10(n)';
+    }
+    return 'n <= 200: k = raiz(n)';
+  }
+
   setAllVisualizationOptions(value: boolean): void {
     this.viewOptions = {
       n: value,
@@ -156,7 +169,10 @@ export class DescriptiveStatisticsPageComponent {
       stdDev: value,
       min: value,
       max: value,
-      quartiles: value
+      range: value,
+      quartiles: value,
+      classCount: value,
+      amplitude: value
     };
   }
 

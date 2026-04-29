@@ -61,7 +61,10 @@
           <label><input type="checkbox" [(ngModel)]="viewOptions.stdDev"> Desv. estandar</label>
           <label><input type="checkbox" [(ngModel)]="viewOptions.min"> Minimo</label>
           <label><input type="checkbox" [(ngModel)]="viewOptions.max"> Maximo</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.range"> Rango (Max - Min)</label>
           <label><input type="checkbox" [(ngModel)]="viewOptions.quartiles"> Cuartiles (Q1, Q2 y Q3)</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.classCount"> Numero de clases (k)</label>
+          <label><input type="checkbox" [(ngModel)]="viewOptions.amplitude"> Amplitud (Rango / k)</label>
         </div>
       </section>
 
@@ -116,6 +119,11 @@
             <p>Maximo</p>
             <strong>{{ formatNumber(stats.max) }}</strong>
           </div>
+          <div class="metric-card" *ngIf="viewOptions.range">
+            <p>Rango (Max - Min)</p>
+            <strong>{{ formatNumber(stats.range) }}</strong>
+            <small>{{ formatNumber(stats.max) }} - {{ formatNumber(stats.min) }}</small>
+          </div>
           <div class="metric-card" *ngIf="viewOptions.quartiles">
             <p>Q1 (primer cuartil)</p>
             <strong>{{ formatNumber(stats.q1) }}</strong>
@@ -127,6 +135,17 @@
           <div class="metric-card" *ngIf="viewOptions.quartiles">
             <p>Q3 (tercer cuartil)</p>
             <strong>{{ formatNumber(stats.q3) }}</strong>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.classCount">
+            <p>Numero de clases (k)</p>
+            <strong>{{ stats.classCount }}</strong>
+            <small>{{ classCountMethodLabel(stats.classCountMethod) }}</small>
+            <small>k exacto: {{ formatNumber(stats.classCountRaw) }}</small>
+          </div>
+          <div class="metric-card" *ngIf="viewOptions.amplitude">
+            <p>Amplitud (Rango / k)</p>
+            <strong>{{ formatNumber(stats.amplitude) }}</strong>
+            <small>{{ formatNumber(stats.range) }} / {{ stats.classCount }}</small>
           </div>
         </div>
 

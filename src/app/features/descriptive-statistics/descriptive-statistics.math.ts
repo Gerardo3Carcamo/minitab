@@ -21,6 +21,11 @@ export interface DescriptiveStatisticsResult {
   stdDev: number;
   min: number;
   max: number;
+  range: number;
+  classCountRaw: number;
+  classCount: number;
+  classCountMethod: 'log' | 'sqrt';
+  amplitude: number;
 }
 
 export function parseDataInput(text: string): ParseDataResult {
@@ -56,10 +61,13 @@ export function calculateDescriptiveStatistics(values: number[]): DescriptiveSta
   const stdDev = Math.sqrt(variance);
   const min = sorted[0];
   const max = sorted[n - 1];
+  const range = max - min;
   const median = calculateMedian(sorted);
   const q1 = minitabQuartile(sorted, 1);
   const q3 = minitabQuartile(sorted, 3);
   const { modes, modeCount } = calculateModes(sorted);
+  const classCountData = calculateClassCount(n);
+  const amplitude = range / classCountData.k;
 
   return {
     n,
@@ -73,7 +81,30 @@ export function calculateDescriptiveStatistics(values: number[]): DescriptiveSta
     variance,
     stdDev,
     min,
-    max
+    max,
+    range,
+    classCountRaw: classCountData.raw,
+    classCount: classCountData.k,
+    classCountMethod: classCountData.method,
+    amplitude
+  };
+}
+
+function calculateClassCount(n: number): { raw: number; k: number; method: 'log' | 'sqrt' } {
+  if (n > 200) {
+    const raw = 1 + (3.222 * Math.log10(n));
+    return {
+      raw,
+      k: Math.max(1, Math.ceil(raw)),
+      method: 'log'
+    };
+  }
+
+  const raw = Math.sqrt(n);
+  return {
+    raw,
+    k: Math.max(1, Math.ceil(raw)),
+    method: 'sqrt'
   };
 }
 
