@@ -83,6 +83,13 @@
               <span>Valor</span>
               <input [(ngModel)]="binsManualText" type="text" [disabled]="binsMode !== 'manual'">
             </label>
+            <label>
+              <span>Metodo de clase</span>
+              <select [(ngModel)]="classMethod">
+                <option value="cutpoint">Punto de corte</option>
+                <option value="midpoint">Punto medio</option>
+              </select>
+            </label>
           </div>
 
           <div class="radio-list">

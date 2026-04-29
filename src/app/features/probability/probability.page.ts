@@ -17,6 +17,7 @@ type TabKey = 'hist' | 'data' | 'preview' | 'summary' | 'output';
 type GroupMode = 'Ninguno' | 'Superpuesto';
 type BinsMode = 'auto' | 'manual';
 type HistScale = 'Densidad' | 'Porcentaje' | 'Probabilidad';
+type ClassMethod = 'cutpoint' | 'midpoint';
 
 interface HistogramDataset {
   label: string | null;
@@ -29,6 +30,7 @@ interface HistogramModel {
   allValues: number[];
   variableLabel: string;
   bins: number | 'auto';
+  classMethod: ClassMethod;
   scale: HistScale;
   discrete: boolean;
   showStats: boolean;
@@ -94,6 +96,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
 
   binsMode: BinsMode = 'auto';
   binsManualText = '20';
+  classMethod: ClassMethod = 'cutpoint';
   scale: HistScale = 'Densidad';
 
   showStats = true;
@@ -331,12 +334,14 @@ export class ProbabilityPageComponent implements AfterViewInit {
       return;
     }
     let bins: number | 'auto';
+    let classMethod: ClassMethod;
     let lsl: number | null;
     let usl: number | null;
     let target: number | null;
     try {
       const params = this.histParams();
       bins = params.bins;
+      classMethod = params.classMethod;
       lsl = params.lsl;
       usl = params.usl;
       target = params.target;
@@ -374,6 +379,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
       allValues,
       variableLabel: this.varName,
       bins,
+      classMethod,
       scale: this.scale,
       discrete: this.discrete,
       showStats: this.showStats,
@@ -620,7 +626,13 @@ export class ProbabilityPageComponent implements AfterViewInit {
     return { values, grouped: null, error: null };
   }
 
-  private histParams(): { bins: number | 'auto'; lsl: number | null; usl: number | null; target: number | null } {
+  private histParams(): {
+    bins: number | 'auto';
+    classMethod: ClassMethod;
+    lsl: number | null;
+    usl: number | null;
+    target: number | null;
+  } {
     let bins: number | 'auto' = 'auto';
     if (this.binsMode === 'manual') {
       const raw = this.binsManualText.trim();
@@ -631,6 +643,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
     }
     return {
       bins,
+      classMethod: this.classMethod,
       lsl: parseOptionalFloat(this.lslText),
       usl: parseOptionalFloat(this.uslText),
       target: parseOptionalFloat(this.targetText)
@@ -690,7 +703,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
       this.drawHistogramPlaceholder(ctx, width, height);
       return;
     }
-    const edges = this.computeBinEdges(model.allValues, model.bins, model.discrete);
+    const edges = this.computeBinEdges(model.allValues, model.bins, model.discrete, model.classMethod);
     if (edges.length < 2) {
       this.drawHistogramPlaceholder(ctx, width, height);
       return;
@@ -704,6 +717,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
     const plotHeight = height - top - bottom;
     const xMin = edges[0];
     const xMax = edges[edges.length - 1];
+    const integerXAxis = this.shouldUseIntegerXAxis(model.allValues);
 
     const histograms = model.datasets.map((dataset) => ({
       ...dataset,
@@ -711,11 +725,12 @@ export class ProbabilityPageComponent implements AfterViewInit {
     }));
 
     let yMax = histograms.reduce((acc, hist) => Math.max(acc, ...hist.heights), 0);
-    const fitLine = model.showFit ? this.normalCurve(model.allValues, xMin, xMax, model.scale) : null;
+    const binWidth = this.meanBinWidth(edges);
+    const fitLine = model.showFit ? this.normalCurve(model.allValues, xMin, xMax, model.scale, binWidth) : null;
     if (fitLine && fitLine.y.length > 0) {
       yMax = Math.max(yMax, ...fitLine.y);
     }
-    const kdeLine = model.showKde ? this.kdeCurve(model.allValues, xMin, xMax, model.scale) : null;
+    const kdeLine = model.showKde ? this.kdeCurve(model.allValues, xMin, xMax, model.scale, binWidth) : null;
     if (kdeLine && kdeLine.y.length > 0) {
       yMax = Math.max(yMax, ...kdeLine.y);
     }
@@ -809,7 +824,7 @@ export class ProbabilityPageComponent implements AfterViewInit {
       const xValue = xMin + ((xMax - xMin) * i) / 5;
       const x = left + (plotWidth * i) / 5;
       ctx.textAlign = 'center';
-      ctx.fillText(formatFloat(xValue, 4), x, top + plotHeight + 18);
+      ctx.fillText(this.formatAxisTick(xValue, integerXAxis), x, top + plotHeight + 18);
     }
 
     this.drawLegend(ctx, model, left + 12, top + 12);
@@ -962,7 +977,13 @@ export class ProbabilityPageComponent implements AfterViewInit {
     return { heights, counts };
   }
 
-  private normalCurve(values: number[], min: number, max: number, scale: HistScale): { x: number[]; y: number[] } | null {
+  private normalCurve(
+    values: number[],
+    min: number,
+    max: number,
+    scale: HistScale,
+    binWidth: number
+  ): { x: number[]; y: number[] } | null {
     if (values.length < 2) {
       return null;
     }
@@ -981,6 +1002,8 @@ export class ProbabilityPageComponent implements AfterViewInit {
       let currentY = Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI));
       if (scale === 'Porcentaje') {
         currentY *= 100;
+      } else if (scale === 'Probabilidad') {
+        currentY *= binWidth;
       }
       x.push(currentX);
       y.push(currentY);
@@ -988,7 +1011,13 @@ export class ProbabilityPageComponent implements AfterViewInit {
     return { x, y };
   }
 
-  private kdeCurve(values: number[], min: number, max: number, scale: HistScale): { x: number[]; y: number[] } | null {
+  private kdeCurve(
+    values: number[],
+    min: number,
+    max: number,
+    scale: HistScale,
+    binWidth: number
+  ): { x: number[]; y: number[] } | null {
     if (values.length < 2) {
       return null;
     }
@@ -1010,6 +1039,8 @@ export class ProbabilityPageComponent implements AfterViewInit {
       let currentY = kernelSum / (values.length * bandwidth);
       if (scale === 'Porcentaje') {
         currentY *= 100;
+      } else if (scale === 'Probabilidad') {
+        currentY *= binWidth;
       }
       x.push(currentX);
       y.push(currentY);
@@ -1017,36 +1048,71 @@ export class ProbabilityPageComponent implements AfterViewInit {
     return { x, y };
   }
 
-  private computeBinEdges(values: number[], bins: number | 'auto', discrete: boolean): number[] {
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+  private computeBinEdges(
+    values: number[],
+    bins: number | 'auto',
+    discrete: boolean,
+    classMethod: ClassMethod
+  ): number[] {
+    const rawMin = Math.min(...values);
+    const rawMax = Math.max(...values);
 
-    if (discrete) {
-      const low = Math.floor(min);
-      const high = Math.ceil(max);
-      const edges: number[] = [];
-      for (let value = low - 0.5; value <= high + 0.5 + 1e-9; value += 1) {
-        edges.push(value);
-      }
-      return edges;
+    if (rawMin === rawMax) {
+      const span = discrete ? 1 : Math.max(Math.abs(rawMin) * 0.2, 1);
+      return [rawMin - (span / 2), rawMax + (span / 2)];
     }
 
-    if (min === max) {
-      const span = Math.max(Math.abs(min) * 0.2, 1);
-      return [min - span, max + span];
+    const min = discrete ? Math.floor(rawMin) : rawMin;
+    const max = discrete ? Math.ceil(rawMax) : rawMax;
+
+    const requestedBins = bins === 'auto' ? this.recommendedBinCount(values.length) : bins;
+    const binCount = Math.max(1, Math.min(120, Math.floor(requestedBins)));
+    const span = max - min;
+
+    let width = Math.max(span / binCount, 1e-9);
+    let start = min;
+    if (classMethod === 'midpoint' && binCount > 1) {
+      width = Math.max(span / (binCount - 1), 1e-9);
+      start = min - (width / 2);
     }
 
-    const binCount = bins === 'auto'
-      ? Math.max(5, Math.min(60, Math.ceil(Math.log2(values.length) + 1)))
-      : bins;
-
-    const width = (max - min) / binCount;
-    const edges: number[] = [min];
-    for (let index = 1; index < binCount; index += 1) {
-      edges.push(min + index * width);
+    const edges: number[] = [];
+    for (let index = 0; index <= binCount; index += 1) {
+      edges.push(start + (index * width));
     }
-    edges.push(max);
     return edges;
+  }
+
+  private recommendedBinCount(sampleSize: number): number {
+    if (sampleSize <= 1) {
+      return 1;
+    }
+    const raw = sampleSize > 200
+      ? 1 + (3.222 * Math.log10(sampleSize))
+      : Math.sqrt(sampleSize);
+    return Math.max(1, Math.ceil(raw));
+  }
+
+  private meanBinWidth(edges: number[]): number {
+    if (edges.length < 2) {
+      return 1;
+    }
+    let total = 0;
+    for (let index = 0; index < edges.length - 1; index += 1) {
+      total += Math.max(edges[index + 1] - edges[index], 1e-9);
+    }
+    return total / (edges.length - 1);
+  }
+
+  private shouldUseIntegerXAxis(values: number[]): boolean {
+    return values.length > 0 && values.every((value) => Number.isInteger(value));
+  }
+
+  private formatAxisTick(value: number, useInteger: boolean): string {
+    if (useInteger) {
+      return String(Math.round(value));
+    }
+    return formatFloat(value, 4);
   }
 
   private scaleLabel(scale: HistScale): string {
